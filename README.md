@@ -7,16 +7,18 @@ Inspired by [jin-qu/jinqu-odata-cli](https://github.com/jin-qu/jinqu-odata-cli) 
 Usage: ts-odata-model-gen \[options\]<br/>
 
 Options:<br/>
-  -V, --version                     output the version number<br/>
-  -u, --url <odata_url>             OData service url<br/>
-  -o, --outDir <output_dir>         output directory (default: "models")<br/>
-  -b, --baseType <class|interface>  base type for entity types<br/>
-  -f, --useInterfaces               use interfaces instead of classes<br/>
-  -s, --strictNullability           use strict nullability assertions for properties<br/>
-  -i, --initNonNullProps            use initializers for non-nullable properties<br/>
-  -c, --camelCaseProps              use camelCase property names<br/>
-  -k, --kebabCaseModules            use kebab-case module names<br/>
-  -h, --help                        display help for command<br/>
+<table>
+<tr><td>-V, --version</td><td>                     output the version number</td></tr>
+<tr><td>-u, --url <odata_url></td><td>             OData service url</td></tr>
+<tr><td>-o, --outDir <output_dir></td><td>         output directory (default: "models")</td></tr>
+<tr><td>-b, --baseType <class|interface></td><td>  base type for entity types</td></tr>
+<tr><td>-f, --useInterfaces</td><td>               use interfaces instead of classes</td></tr>
+<tr><td>-s, --strictNullability</td><td>           use strict nullability assertions for properties</td></tr>
+<tr><td>-i, --initNonNullProps</td><td>            use initializers for non-nullable properties</td></tr>
+<tr><td>-c, --camelCaseProps</td><td>              use camelCase property names</td></tr>
+<tr><td>-k, --kebabCaseModules</td><td>            use kebab-case module names</td></tr>
+<tr><td>-h, --help</td><td>                        display help for command</td></tr>
+</table>
   
 Example:<br/>
-`node ts-odata-model-gen --url https://localhost:5001/odata --outDir models --strictNullability --camelCaseProps --kebabCaseModules`
+`ts-odata-model-gen --url https://localhost:5001/odata --outDir models --strictNullability --camelCaseProps --kebabCaseModules`
