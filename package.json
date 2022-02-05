@@ -1,7 +1,8 @@
 {
   "name": "ts-odata-model-gen",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Typescript OData model generator",
+  "bin": "./tsgen.js",
   "main": "tsgen.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -23,8 +24,5 @@
     "request": "^2.88.2",
     "request-promise-native": "^1.0.9",
     "xml2js": "^0.4.23"
-  },
-  "bin": {
-    "jinqu-odata": "./cli.js"
   }
 }

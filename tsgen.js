@@ -1,4 +1,5 @@
-/* tsgen.js */
+#!/usr/bin/env node
+
 const util = require('util');
 var path = require('path');
 const fs = require('fs');
@@ -25,15 +26,20 @@ program
     .description(package.description)
     .requiredOption('-u, --url <odata url>', 'OData service url')
     .option('-o, --outDir <output dir>', 'Output directory', 'models')
-    .option('-i, --useInterfaces', 'Use interfaces for entity types')
-    .option('-n, --nonNullAssertions', 'Use non-null property assertions')
+    .option('-b, --baseType <type>', 'Base type for entity types')
+    .option('-f, --useInterfaces', 'Use interfaces instead of classes')
+    .option('-s, --strictNullability', 'Use strict nullability assertions for properties')
+    .option('-i, --initNonNullProps', 'Use initializers for non-nullable properties')
     .option('-c, --camelCaseProps', 'Use camelCase property names')
     .option('-k, --kebabCaseModules', 'Use kebab-case module names')
     .parse(process.argv);
 
 const options = program.opts();
-options.metadataUrl = new URL('$metadata', options.url).href;
-options.nonNullAssertions = !options.useInterfaces && options.nonNullAssertions;
+const baseUrl = new URL(options.url);
+options.metadataUrl = new URL(path.join(baseUrl.pathname, '$metadata'), baseUrl.origin).href;
+
+options.strictNullability = !options.useInterfaces && options.strictNullability;
+options.initNonNullProps = !options.useInterfaces && options.initNonNullProps;
 
 function toCamelCase(str) {
     return str && str.length > 0 &&
@@ -65,7 +71,7 @@ function prepareComplexType(complexType) {
             });    
         }   
         
-        //complexType.imports.sort((i1, i2) => i1.typeName.localeCompare(i2.typeName));
+        complexType.imports.sort((i1, i2) => i1.typeName.localeCompare(i2.typeName));
     }
 }
 
@@ -99,7 +105,7 @@ function prepareEntityType(entityType) {
             });    
         }   
 
-        //entityType.imports.sort((i1, i2) => i1.typeName.localeCompare(i2.typeName));
+        entityType.imports.sort((i1, i2) => i1.typeName.localeCompare(i2.typeName));
     }
 }
 
@@ -174,10 +180,12 @@ function getModuleName(typeName) {
     return options.kebabCaseModules ? toKebabCase(typeName) : typeName;
 }
 
+let schema;
+
 async function loadMetadata() {
     const response = await request.get(options.metadataUrl);
     const metadata = await util.promisify(parseXml)(response);
-    const schema = metadata['edmx:Edmx']['edmx:DataServices'][0]['Schema'][0];
+    schema = metadata['edmx:Edmx']['edmx:DataServices'][0]['Schema'][0];
 
     if (!fs.existsSync(options.outDir)) {
         fs.mkdirSync(options.outDir);
@@ -188,6 +196,8 @@ async function loadMetadata() {
         date,
         version: package.version,
         description: package.description,
+        baseType: options.baseType,
+        baseModuleName: getModuleName(options.baseType),
         useInterfaces: options.useInterfaces
     };
 
@@ -231,6 +241,7 @@ async function loadMetadata() {
             prepareEntityType(entityType);
             handlebars.Utils.extend(entityType, commonContext);
             const entityOutput = generateEntity(entityType);
+            //const entityOutput = generateEntity(entityType, { data: { schema } });
             const typeName = entityType.$.Name;
             const moduleName = getModuleName(typeName);
             const fileName = path.resolve(options.outDir, moduleName + '.ts');
@@ -241,7 +252,7 @@ async function loadMetadata() {
 
     // exports
     if (exportsContext.exports.length > 0) {
-        //exportsContext.exports.sort((i1, i2) => i1.typeName.localeCompare(i2.typeName));
+        exportsContext.exports.sort((i1, i2) => i1.typeName.localeCompare(i2.typeName));
 
         const generateExports = handlebars.compile(exportsTemplate, { noEscape: true });
         handlebars.Utils.extend(exportsContext, commonContext);
@@ -253,13 +264,89 @@ async function loadMetadata() {
 }
 
 function registerHelpers() {
-    handlebars.registerHelper('nonNullAssertion', property => {
-        return options.nonNullAssertions && property.Nullable == 'false' ? '!' : ''
-    })
+    handlebars.registerHelper('strictAssertion', property => {
+        if (options.strictNullability) {
+            if (property.Nullable == 'false') {
+                return options.initNonNullProps ? '' : '!'
+            }
+            else {
+                return '?';
+            }
+        }
+        else {
+            return '';
+        }
+    });
+
+    handlebars.registerHelper('nonNullDefault', property => {
+        getDefaultVal = tn => {
+            switch (tn) {
+                //case 'bigint'    : return 'BigInt(0)';
+                case 'boolean'   : return 'false';
+                case 'number'    : return '0';
+                //case 'object'    : return '{}';
+                case 'string'    : return '""';
+                default          : return '';
+            }
+        }
+
+        findEnumType = t => 
+            schema.EnumType ? schema.EnumType.find(e => e.$.Name == t) : null;
+
+        getEnumDefaultVal = et => {
+            if (et.Member) {
+                const mv = et.Member.find(m => m.$.Value == '0');
+                if (mv) {
+                    return `${et.$.Name}.${mv.$.Name}`;
+                }
+            }
+            return `<${et.$.Name}> 0`;
+        }
+
+        if (options.initNonNullProps && property.Nullable == 'false') {
+            let defaultVal = '';
+            if (property.isPrimitive) {
+                defaultVal = getDefaultVal(property.typeName);
+            }
+            /*else if (property.isCollection) {
+                defaultVal = '[]';
+            }*/
+            else {
+                const enumType = findEnumType(property.typeName);
+                if (enumType) {
+                    defaultVal = getEnumDefaultVal(enumType);
+                }
+                else {
+                    defaultVal = `new ${property.typeName}()`;
+                }
+            }
+            return ` = ${defaultVal}`;
+        }
+        else {
+            return '';
+        }
+    });
+
+    handlebars.registerHelper('nonNullNavDefault', property => {
+        if (options.initNonNullProps && property.Nullable == 'false') {
+            let defaultVal = '';
+            if (property.isCollection) {
+                defaultVal = '[]';
+            }
+            else {
+                defaultVal = `new ${property.typeName}()`;
+            }
+            return ` = ${defaultVal}`;
+        }
+        else {
+            return '';
+        }
+    });
 
     handlebars.registerHelper('getPropertyName', property => {
-        return options.camelCaseProps ? toCamelCase(property.Name) : property.Name;
-    })
+        let propName = options.camelCaseProps ? toCamelCase(property.Name) : property.Name;
+        return options.useInterfaces ? propName + '?' : propName;
+    });
 }
 
 registerHelpers();
@@ -281,29 +368,32 @@ const complexTemplate =
 {{#imports}}import { {{typeName}} } from './{{moduleName}}';
 {{/imports}}
 
-export interface {{$.Name}} {
+export {{#if useInterfaces}}interface{{else}}class{{/if}} {{$.Name}} {
     {{#each Property}}
-    {{getPropertyName $}}: {{$.typeName}};
+    {{getPropertyName $}}{{strictAssertion $}}: {{$.typeName}}{{nonNullDefault $}};
     {{/each}}
 }`;
 
 const entityTemplate =
 `/* This code was generated by {{description}} v{{version}} */
 /* tslint:disable */
+{{#if baseType}}
+import { {{baseType}} } from './{{baseModuleName}}';
+{{/if}}
 {{#imports}}import { {{typeName}} } from './{{moduleName}}';
 {{/imports}}
 
-export {{#if useInterfaces}}interface{{else}}class{{/if}} {{$.Name}} {
+export {{#if useInterfaces}}interface{{else}}class{{/if}} {{$.Name}}{{#baseType}} extends {{this}}{{/baseType}} {
     {{#each Property}}
-    {{getPropertyName $}}{{nonNullAssertion $}}: {{$.typeName}};
+    {{getPropertyName $}}{{strictAssertion $}}: {{$.typeName}}{{nonNullDefault $}};
     {{/each}}
     {{#each NavigationProperty}}
-    {{getPropertyName $}}{{nonNullAssertion $}}: {{$.typeName}};
+    {{getPropertyName $}}{{strictAssertion $}}: {{$.typeName}}{{nonNullNavDefault $}};
     {{/each}}
 }`;
 
 const exportsTemplate =
-`/* This code was generated by ts-odata-gen code generator */
+`/* This code was generated by {{description}} v{{version}} */
 /* tslint:disable */
 {{#exports}}export { {{typeName}} } from './{{moduleName}}';
 {{/exports}}`;

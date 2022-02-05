@@ -10,11 +10,12 @@
             "name": "Launch Program",
             "program": "${workspaceFolder}/tsgen.js",
             "args": [
-                //"-u", "https://services.odata.org/v4/Northwind/Northwind.svc",
-                "-u", "http://localhost:5001/api/",
+                "-u", "https://services.odata.org/v4/Northwind/Northwind.svc",
                 "-o", "models",
-                //"-n",
-                //"-i",
+                "-b", "BaseEntity",
+                //"-f",
+                "-s",
+                "-i",
                 "-c",
                 "-k"
             ]
