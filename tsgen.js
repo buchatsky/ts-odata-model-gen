@@ -8,30 +8,20 @@ const request = require('request-promise-native');
 const parseXml = require('xml2js').parseString;
 const handlebars = require('handlebars');
 
-/*
-let package;
-try {
-    package = require('ts-odata-model-gen/package.json');
-} catch {
-    try {
-        package = require('../package.json').version;
-    } catch {}
-}
-*/
 const package = require('./package.json');
 
 program
     //.name(package.name)
     .version(package.version)
     .description(package.description)
-    .requiredOption('-u, --url <odata url>', 'OData service url')
-    .option('-o, --outDir <output dir>', 'Output directory', 'models')
-    .option('-b, --baseType <type>', 'Base type for entity types')
-    .option('-f, --useInterfaces', 'Use interfaces instead of classes')
-    .option('-s, --strictNullability', 'Use strict nullability assertions for properties')
-    .option('-i, --initNonNullProps', 'Use initializers for non-nullable properties')
-    .option('-c, --camelCaseProps', 'Use camelCase property names')
-    .option('-k, --kebabCaseModules', 'Use kebab-case module names')
+    .requiredOption('-u, --url <odata_url>', 'OData service url')
+    .option('-o, --outDir <output_dir>', 'output directory', 'models')
+    .option('-b, --baseType <class|interface>', 'base type for entity types')
+    .option('-f, --useInterfaces', 'use interfaces instead of classes')
+    .option('-s, --strictNullability', 'use strict nullability assertions for properties')
+    .option('-i, --initNonNullProps', 'use initializers for non-nullable properties')
+    .option('-c, --camelCaseProps', 'use camelCase property names')
+    .option('-k, --kebabCaseModules', 'use kebab-case module names')
     .parse(process.argv);
 
 const options = program.opts();

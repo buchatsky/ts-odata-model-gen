@@ -18,6 +18,10 @@
   ],
   "author": "Alex Buchatsky",
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/buchatsky/ts-odata-model-gen/issues"
+  },
+  "homepage": "https://github.com/buchatsky/ts-odata-model-gen",
   "dependencies": {
     "commander": "^9.0.0",
     "handlebars": "^4.7.7",
