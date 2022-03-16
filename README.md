@@ -17,6 +17,7 @@ Options:<br/>
 <tr><td>-i, --initNonNullProps</td><td>            use initializers for non-nullable properties</td></tr>
 <tr><td>-c, --camelCaseProps</td><td>              use camelCase property names</td></tr>
 <tr><td>-k, --kebabCaseModules</td><td>            use kebab-case module names</td></tr>
+<tr><td>-d, --useDateProps</td><td>                use Date type for date/time properties</td></tr>
 <tr><td>-h, --help</td><td>                        display help for command</td></tr>
 </table>
   
