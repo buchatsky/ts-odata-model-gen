@@ -22,6 +22,7 @@ program
     .option('-i, --initNonNullProps', 'use initializers for non-nullable properties')
     .option('-c, --camelCaseProps', 'use camelCase property names')
     .option('-k, --kebabCaseModules', 'use kebab-case module names')
+    .option('-d, --useDateProps', 'use Date type for date/time properties')
     .parse(process.argv);
 
 const options = program.opts();
@@ -116,19 +117,21 @@ function setPropertyInfo(property) {
             case 'Single':
             case 'Double':
             case 'Decimal':
-                return 'number'
-            case 'String':
+                return 'number';
             case 'Date':
             case 'DateTimeOffset':
-            case 'TimeOfDay':
+            //case 'TimeOfDay':
+                return options.useDateProps ?  'Date' : 'string';
+            case 'String':
             case 'Byte':
             case 'SByte':
             case 'Binary':
-                return 'string'
+            case 'TimeOfDay':
+                return 'string';
             case 'Boolean':
-                return 'boolean'
+                return 'boolean';
             default:
-                return 'any'
+                return 'any';
         }
     }
 
