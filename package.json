@@ -1,6 +1,6 @@
 {
   "name": "ts-odata-model-gen",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Typescript OData model generator",
   "bin": "./tsgen.js",
   "main": "tsgen.js",
@@ -23,10 +23,9 @@
   },
   "homepage": "https://github.com/buchatsky/ts-odata-model-gen",
   "dependencies": {
-    "commander": "^9.0.0",
+    "axios": "^0.26.1",
+    "commander": "^9.1.0",
     "handlebars": "^4.7.7",
-    "request": "^2.88.2",
-    "request-promise-native": "^1.0.9",
     "xml2js": "^0.4.23"
   }
 }

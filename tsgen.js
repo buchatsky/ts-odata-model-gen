@@ -4,7 +4,7 @@ const util = require('util');
 var path = require('path');
 const fs = require('fs');
 const program = require('commander');
-const request = require('request-promise-native');
+const axios = require('axios');
 const parseXml = require('xml2js').parseString;
 const handlebars = require('handlebars');
 
@@ -176,8 +176,8 @@ function getModuleName(typeName) {
 let schema;
 
 async function loadMetadata() {
-    const response = await request.get(options.metadataUrl);
-    const metadata = await util.promisify(parseXml)(response);
+    const response = await axios.get(options.metadataUrl);
+    const metadata = await util.promisify(parseXml)(response.data);
     schema = metadata['edmx:Edmx']['edmx:DataServices'][0]['Schema'][0];
 
     if (!fs.existsSync(options.outDir)) {
