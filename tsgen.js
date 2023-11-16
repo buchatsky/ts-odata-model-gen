@@ -4,7 +4,8 @@ const util = require('util');
 var path = require('path');
 const fs = require('fs');
 const program = require('commander');
-const axios = require('axios');
+const https = require('https');
+var axios = require('axios');
 const parseXml = require('xml2js').parseString;
 const handlebars = require('handlebars');
 
@@ -23,6 +24,7 @@ program
     .option('-c, --camelCaseProps', 'use camelCase property names')
     .option('-k, --kebabCaseModules', 'use kebab-case module names')
     .option('-d, --useDateProps', 'use Date type for date/time properties')
+    .option('--ignoreCertErrors', 'ignore SSL/TLS certificate errors')
     .parse(process.argv);
 
 const options = program.opts();
@@ -31,6 +33,14 @@ options.metadataUrl = new URL(path.join(baseUrl.pathname, '$metadata'), baseUrl.
 
 options.strictNullability = !options.useInterfaces && options.strictNullability;
 options.initNonNullProps = !options.useInterfaces && options.initNonNullProps;
+
+if (options.ignoreCertErrors) {
+    axios = axios.create({
+        httpsAgent: new https.Agent({  
+          rejectUnauthorized: false
+        })
+      });    
+}
 
 function toCamelCase(str) {
     return str && str.length > 0 &&

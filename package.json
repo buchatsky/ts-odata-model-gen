@@ -1,6 +1,6 @@
 {
   "name": "ts-odata-model-gen",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "Typescript OData model generator",
   "bin": "./tsgen.js",
   "main": "tsgen.js",
